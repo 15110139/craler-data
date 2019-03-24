@@ -51,15 +51,20 @@ async function crawler() {
 		try {
 			console.log('------------------------------------------------', i, listCopany[i]);
 			const cp = {};
-			cp._id = uuid.v1();
+			cp.companyId = uuid.v1();
 			const data = await rp(listCopany[i]);
 			const $ = cheerio.load(data);
 			const cp_company_name = $('#cp_company_name');
-			console.log(cp_company_name.text());
 			const company_type = $('.company_type');
+
+			if (cp_company_name.data() !== undefined) {
+				console.log(cp_company_name.text());
+				cp.name = cp_company_name.text();
+			}
+
 			if (company_type.data() !== undefined) {
 				console.log(company_type.text());
-				cp.company_type = company_type.text();
+				cp.companyType = company_type.text();
 			}
 			console.log('------------technologies--------------');
 			if ($('.cp_key_technologies').data() !== undefined) {
@@ -107,7 +112,6 @@ async function crawler() {
 		} catch (error) {
 			console.log(error);
 		}
-
 	}
 
 	client.bulk({ body: bulk }, function(err, response) {
