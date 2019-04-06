@@ -3,13 +3,13 @@ var rp = require('request-promise')
 var uuid = require('uuid')
 const elasticsearch = require('elasticsearch')
 
-// const client = new elasticsearch.Client({
-// 	host: 'localhost:9200',
-// 	log: 'trace'
-// })
+const client = new elasticsearch.Client({
+	host: 'localhost:9200',
+	log: 'trace'
+})
 async function crawler() {
 	let listCopany = []
-	for (i = 0; i <= 1; i++) {
+	for (i = 0; i <= 56; i++) {
 		try {
 			console.log('hhihi')
 
@@ -52,7 +52,7 @@ async function crawler() {
 	let bulk = []
 	let bulkJob = []
 
-	for (i = 0; i <= 1; i++) {
+	for (i = 0; i <= 250; i++) {
 		try {
 			console.log('------------------------------------------------', i, listCopany[i])
 			const cp = {}
