@@ -1,7 +1,20 @@
 var cheerio = require('cheerio')
 var rp = require('request-promise')
 var uuid = require('uuid')
+const { Client } = require('pg')
 const elasticsearch = require('elasticsearch')
+const clientPostgres = new Client({
+	user: 'postgres',
+	host: 'localhost',
+	database: 'job',
+	password: 'admin123',
+	port: 5432,
+})
+clientPostgres.connect()
+clientPostgres.query('SELECT NOW()', (err, res) => {
+	console.log(err, res)
+	clientPostgres.end()
+})
 
 const client = new elasticsearch.Client({
 	host: 'localhost:9200',
@@ -9,10 +22,9 @@ const client = new elasticsearch.Client({
 })
 async function crawler() {
 	let listCopany = []
-	for (i = 0; i <= 56; i++) {
+	for (i = 0; i <= 0; i++) {
 		try {
 			console.log('hhihi')
-
 			option = {
 				type: 'POST',
 
@@ -52,7 +64,7 @@ async function crawler() {
 	let bulk = []
 	let bulkJob = []
 
-	for (i = 0; i <= 250; i++) {
+	for (i = 0; i <= 0; i++) {
 		try {
 			console.log('------------------------------------------------', i, listCopany[i])
 			const cp = {}
@@ -82,89 +94,100 @@ async function crawler() {
 				cp.technologies = tec
 				console.log(tec)
 			}
-			console.log('-------------cp_basic_info_details--------------------')
-			if ($('.cp_basic_info_details').data() !== undefined) {
-				let location = ''
-				const cp_basic_info_details = cheerio.load($('.cp_basic_info_details').html())
-				cp_basic_info_details('.li-items-limit').each((index, el) => {
-					console.log(cheerio.load(el).text())
-					location = location + ' ' + cheerio.load(el).text()
+			// console.log('-------------cp_basic_info_details--------------------')
+			// if ($('.cp_basic_info_details').data() !== undefined) {
+			// 	let location = ''
+			// 	const cp_basic_info_details = cheerio.load($('.cp_basic_info_details').html())
+			// 	cp_basic_info_details('.li-items-limit').each((index, el) => {
+			// 		console.log(cheerio.load(el).text())
+			// 		location = location + ' ' + cheerio.load(el).text()
+			// 	})
+			// 	cp.location = location
+			// }
+			const location =[]
+			console.log('-------------location--------------------')
+			if ($('div.cp_address-container').data() !== undefined) {
+				const cp_our_office_img = cheerio.load($('div.cp_address-container').html())
+				cp_our_office_img('p').each((index, el) => {
+					if (cheerio.load(el).text().length > 12){
+						location.push(cheerio.load(el).text())
+					}
 				})
-				cp.location = location
+
+
 			}
 			console.log('---------------------------------------')
 			console.log(cp)
 			console.log('-------------jod--------------------')
-			const cp_our_job_item = $('.cp_our_job_item')
-			if (cp_our_job_item.data() !== undefined) {
-				const listJob = []
-				cp_our_job_item.each((index, el) => {
-					const job = cheerio.load(el)
-					const jobD = {}
+			// const cp_our_job_item = $('.cp_our_job_item')
+			// if (cp_our_job_item.data() !== undefined) {
+			// 	const listJob = []
+			// 	cp_our_job_item.each((index, el) => {
+			// 		const job = cheerio.load(el)
+			// 		const jobD = {}
 
-					// console.log(job('h4 a').text())
-					jobD.name = job('h4 a').text()
-					jobD.companyId = job.companyId
-					jobD.jobId = uuid.v1()
-					job('ul li').each((index, el) => {
-						// console.log('index', index)
-						// console.log(cheerio.load(el).text().trim())'
-						if (index === 0) {
-							jobD.position = cheerio.load(el).text().trim()
-						}
-						if (index === 1) {
-							jobD.location = cheerio.load(el).text().trim()
-						}
-						if (index === 2) {
-							jobD.datePost = cheerio.load(el).text().trim()
-						}
-					})
+			// 		// console.log(job('h4 a').text())
+			// 		jobD.name = job('h4 a').text()
+			// 		jobD.companyId = cp.companyId
+			// 		jobD.jobId = uuid.v1()
+			// 		job('ul li').each((index, el) => {
+			// 			// console.log('index', index)
+			// 			// console.log(cheerio.load(el).text().trim())'
+			// 			if (index === 0) {
+			// 				jobD.position = cheerio.load(el).text().trim()
+			// 			}
+			// 			if (index === 1) {
+			// 				jobD.location = cheerio.load(el).text().trim()
+			// 			}
+			// 			if (index === 2) {
+			// 				jobD.datePost = cheerio.load(el).text().trim()
+			// 			}
+			// 		})
 
-					// console.log('---------1-----')
-					// console.log(jobD)
-					bulkJob.push({
-						index: {
-							_index: 'data-work',
-							_type: 'job'
-						}
-					})
-					bulkJob.push(jobD)
-					listJob.push(jobD)
-				})
+			// 		console.log('---------1-----')
+			// 		console.log(jobD)
+			// 		bulkJob.push({
+			// 			index: {
+			// 				_index: 'data_job',
+			// 				_type: 'job'
+			// 			}
+			// 		})
+			// 		bulkJob.push(jobD)
+			// 		listJob.push(jobD)
+			// 	})
 
-				console.log('listJob', listJob)
-			}
-			bulk.push({
-				index: {
-					_index: 'data-work',
-					_type: 'company'
-				}
-			})
-			bulk.push(cp)
+			// 	// console.log('listJob', listJob)
+			// }
+			// bulk.push({
+			// 	index: {
+			// 		_index: 'data_job',
+			// 		_type: 'company'
+			// 	}
+			// })
+			// bulk.push(cp)
+			// console.log("job")
+			// client.bulk({ body: bulkJob }, function (err, response) {
+			// 	if (err) {
+			// 		console.log('Failed Bulk operation'.red, err)
+			// 	} else {
+			// 		console.log('Successfully imported %s', bulk.length)
+			// 	}
+			// })
 
 		} catch (error) {
 			console.log(error)
 		}
 
-			//perform bulk indeing of the data passed
-		console.log("company")
-		client.bulk({ body: bulk }, function(err, response) {
-			//perform bulk indeing of the data passed
-			if (err) {
-				console.log('Failed Bulk operation'.red, err)
-			} else {
-				console.log('Successfully imported %s', bulk.length)
-			}
-		})
 
-		console.log("job")
-		client.bulk({ body: bulkJob }, function(err, response) {
-			if (err) {
-				console.log('Failed Bulk operation'.red, err)
-			} else {
-				console.log('Successfully imported %s', bulk.length)
-			}
-		})
+		// console.log("company")
+		// client.bulk({ body: bulk }, function (err, response) {
+		// 	//perform bulk indeing of the data passed
+		// 	if (err) {
+		// 		console.log('Failed Bulk operation'.red, err)
+		// 	} else {
+		// 		console.log('Successfully imported %s', bulk.length)
+		// 	}
+		// })
 	}
 }
 
