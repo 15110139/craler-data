@@ -12,7 +12,7 @@ const clientPostgres = new Client({
 })
 clientPostgres.connect()
 clientPostgres.query('SELECT NOW()', (err, res) => {
-	console.log(err, res)
+	// console.log(err, res)
 	clientPostgres.end()
 })
 
@@ -52,7 +52,6 @@ async function crawler() {
 				// });
 			})
 
-			console.log('hhihi')
 		} catch (error) {
 			console.log('co loi', error)
 			break
@@ -71,29 +70,29 @@ async function crawler() {
 			cp.companyId = uuid.v1()
 			const data = await rp(listCopany[i])
 			const $ = cheerio.load(data)
-			const cp_company_name = $('#cp_company_name')
-			const company_type = $('.company_type')
+			// const cp_company_name = $('#cp_company_name')
+			// const company_type = $('.company_type')
 
-			if (cp_company_name.data() !== undefined) {
-				console.log(cp_company_name.text())
-				cp.name = cp_company_name.text()
-			}
+			// if (cp_company_name.data() !== undefined) {
+			// 	console.log(cp_company_name.text())
+			// 	cp.name = cp_company_name.text()
+			// }
 
-			if (company_type.data() !== undefined) {
-				console.log(company_type.text())
-				cp.companyType = company_type.text()
-			}
-			console.log('------------technologies--------------')
-			if ($('.cp_key_technologies').data() !== undefined) {
-				const cp_key_technologies = cheerio.load($('.cp_key_technologies').html())
-				let tec = ''
-				cp_key_technologies('ul li').each((index, el) => {
-					console.log(cheerio.load(el).text())
-					tec = tec + ' ' + cheerio.load(el).text()
-				})
-				cp.technologies = tec
-				console.log(tec)
-			}
+			// if (company_type.data() !== undefined) {
+			// 	console.log(company_type.text())
+			// 	cp.companyType = company_type.text()
+			// }
+			// console.log('------------technologies--------------')
+			// if ($('.cp_key_technologies').data() !== undefined) {
+			// 	const cp_key_technologies = cheerio.load($('.cp_key_technologies').html())
+			// 	let tec = ''
+			// 	cp_key_technologies('ul li').each((index, el) => {
+			// 		// console.log(cheerio.load(el).text())
+			// 		tec = tec + ' ' + cheerio.load(el).text()
+			// 	})
+			// 	cp.technologies = tec
+			// 	// console.log(tec)
+			// }
 			// console.log('-------------cp_basic_info_details--------------------')
 			// if ($('.cp_basic_info_details').data() !== undefined) {
 			// 	let location = ''
@@ -104,20 +103,97 @@ async function crawler() {
 			// 	})
 			// 	cp.location = location
 			// }
-			const location =[]
-			console.log('-------------location--------------------')
-			if ($('div.cp_address-container').data() !== undefined) {
-				const cp_our_office_img = cheerio.load($('div.cp_address-container').html())
-				cp_our_office_img('p').each((index, el) => {
-					if (cheerio.load(el).text().length > 12){
-						location.push(cheerio.load(el).text())
-					}
+			// const location = []
+			// console.log('-------------location--------------------')
+			// if ($('div.cp_address-container').data() !== undefined) {
+			// 	const cp_our_office_img = cheerio.load($('div.cp_address-container').html())
+			// 	cp_our_office_img('p').each((index, el) => {
+			// 		if (cheerio.load(el).text().length > 12) {
+			// 			location.push(cheerio.load(el).text())
+			// 		}
+			// 	})
+
+
+			// }
+			// console.log('-------------ourStore--------------------')
+			// if ($('div.cp_our_story_container').data() !== undefined) {
+			// 	let ourStore = []
+			// 	const cp_our_story_container = cheerio.load($('div.cp_our_story_container').html())
+			// 	cp_our_story_container('div.cp_story_item_content').each((index, el) => {
+			// 		let store = {}
+			// 		const cp_story_item_content = cheerio.load(el)
+			// 		// console.log(cp_story_item_content('h2').text())
+			// 		store.title = cp_story_item_content('h2').text()
+			// 		let content = []
+			// 		const custom_story_item_content = cheerio.load(cp_story_item_content('div').html())
+			// 		custom_story_item_content('p').each((index, elp) => {
+			// 			if (cheerio.load(elp).text().length > 45 && cheerio.load(elp).text() !== "                                            ") {
+			// 				// console.log(cheerio.load(elp).text())
+			// 				content.push(cheerio.load(elp).text())
+			// 			}
+			// 		})
+			// 		store.content = content
+			// 		// console.log(store)
+			// 		ourStore.push(store)
+			// 	})
+			// 	console.log(ourStore)
+			// }
+			// console.log('-------------People--------------------')
+			// if ($('div.cp_our_people_container').data() !== undefined) {
+			// 	console.log('hih')
+			// 	let ourPeople = []
+			// 	const cp_our_people_container = cheerio.load($('div.cp_our_people_container').html())
+			// 	cp_our_people_container('div.cp_our_people_item_content').each((index, el) => {
+			// 		console.log(index)
+			// 		let people = {}
+			// 		const cp_our_people_item_content = cheerio.load(el)
+			// 		// console.log(cp_story_item_content('h2').text())
+			// 		people.name = cp_our_people_item_content('h2').text()
+			// 		people.position = cp_our_people_item_content('h3').text()
+
+			// 		let content = []
+			// 		const custom_people_item_content = cheerio.load(cp_our_people_item_content('div').html())
+			// 		custom_people_item_content('p').each((index, elp) => {
+			// 			if (cheerio.load(elp).text().length > 45 && cheerio.load(elp).text() !== "                                            ") {
+			// 				// console.log(cheerio.load(elp).text())
+			// 				content.push(cheerio.load(elp).text())
+			// 			}
+			// 		})
+			// 		people.content = content
+			// 		console.log(people)
+			// 		ourPeople.push(people)
+			// 	})
+			// 	console.log(ourPeople)
+			// }
+			console.log('-------------Benefits--------------------')
+
+			if ($('div.cp_our_benefits_container').data() !== undefined) {
+				console.log('hih')
+				let benefits = []
+				const cp_our_benefits_container = cheerio.load($('div.cp_our_benefits_container').html())
+				cp_our_benefits_container('div.cp_our_benefit_item_container').each((index, el) => {
+					console.log(index)
+					let benefit = {}
+					const cp_our_benefit_item_container = cheerio.load(el)
+					// console.log(cp_story_item_content('h2').text())
+					benefit.title = cp_our_benefit_item_container('div.cp_benefit_name h3').text()
+					benefit.description = cp_our_benefit_item_container('div.cp_benefit_description p').text()
+
+					// let content = []
+					// const custom_people_item_content = cheerio.load(cp_our_benefit_item_container('div').html())
+					// custom_people_item_content('p').each((index, elp) => {
+					// 	if (cheerio.load(elp).text().length > 45 && cheerio.load(elp).text() !== "                                            ") {
+					// 		// console.log(cheerio.load(elp).text())
+					// 		content.push(cheerio.load(elp).text())
+					// 	}
+					// })
+					// people.content = content
+					console.log(benefit)
+					benefits.push(benefit)
 				})
-
-
+				// console.log(benefit)
 			}
-			console.log('---------------------------------------')
-			console.log(cp)
+
 			console.log('-------------jod--------------------')
 			// const cp_our_job_item = $('.cp_our_job_item')
 			// if (cp_our_job_item.data() !== undefined) {
