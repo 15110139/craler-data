@@ -1,24 +1,76 @@
 var cheerio = require('cheerio')
 var rp = require('request-promise')
 var uuid = require('uuid')
-const { Client } = require('pg')
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/find_job', { useNewUrlParser: true });
 const elasticsearch = require('elasticsearch')
-const clientPostgres = new Client({
-	user: 'postgres',
-	host: 'localhost',
-	database: 'job',
-	password: 'admin123',
-	port: 5432,
-})
-clientPostgres.connect()
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+var People = {
+	name: String,
+	position: String,
+	content: [String],
+}
+
+var Story = {
+	title: String,
+	content: [String],
+
+}
+
+var Benefit = {
+	title: String,
+	description: String,
+}
+
+var Company = new Schema({
+	_id: String,
+	name: String,
+	technologies: [String],
+	companyType: String,
+	location: [String],
+	ourPeople: [Object],
+	ourStory: [Object],
+	benefits: [Object],
+	isActive: {
+		type: Boolean,
+		default: true
+	}
+
+});
+
+var CompanyModel = mongoose.model('Company', Company);
 
 
 const client = new elasticsearch.Client({
 	host: 'localhost:9200',
 	log: 'trace'
 })
+
+async function crawlerJob() {
+
+	for (i = 0; i <= 0; i++) {
+		try {
+			option = {
+				type: 'GET',
+
+				method: 'GET',
+
+			}
+			const data = await rp('https://www.vietnamworks.com/recruitment-specialist-chuyen-vien-tuyen-dung-2-1090101-jd/?utm_source=company_profile')
+			console.log(data)
+			const $ = cheerio.load(data)
+
+		} catch (error) {
+			console.log('co loi', error)
+			break
+		}
+	}
+}
+
 async function crawler() {
 	let listCopany = []
+	let listCompanytype = []
 	for (i = 0; i <= 0; i++) {
 		try {
 			console.log('hhihi')
@@ -59,26 +111,33 @@ async function crawler() {
 	console.log('0k')
 	let bulk = []
 	let bulkJob = []
+	let letListjob = []
+	let listLinkjob = []
 
 	for (i = 0; i <= 0; i++) {
 		try {
 			console.log('------------------------------------------------', i, listCopany[i])
 			const cp = {}
-			cp.companyId = uuid.v1()
+			cp._id = uuid.v1()
 			const data = await rp(listCopany[i])
 			const $ = cheerio.load(data)
 			const cp_company_name = $('#cp_company_name')
-			const company_type = $('.company_type')
 
+			const company_type = $('span.company_type')
+			if (company_type.data() !== undefined) {
+				// console.log(company_type.text())
+				cp.company_type = company_type.text()
+				// listCompanytype.push(company_type.text())
+			}
+			// 
 			if (cp_company_name.data() !== undefined) {
 				// console.log(cp_company_name.text())
 				cp.name = cp_company_name.text()
 			}
 
-			if (company_type.data() !== undefined) {
-				// console.log(company_type.text())
-				cp.companyType = company_type.text()
-			}
+			// cp.company_type = listCompanytype[i]
+
+
 			console.log('------------technologies--------------')
 			if ($('.cp_key_technologies').data() !== undefined) {
 				const cp_key_technologies = cheerio.load($('.cp_key_technologies').html())
@@ -178,14 +237,14 @@ async function crawler() {
 					benefit.title = cp_our_benefit_item_container('div.cp_benefit_name h3').text()
 					benefit.description = cp_our_benefit_item_container('div.cp_benefit_description p').text()
 
-					let content = []
-					const custom_people_item_content = cheerio.load(cp_our_benefit_item_container('div').html())
-					custom_people_item_content('p').each((index, elp) => {
-						if (cheerio.load(elp).text().length > 45 && cheerio.load(elp).text() !== "                                            ") {
-							// console.log(cheerio.load(elp).text())
-							content.push(cheerio.load(elp).text())
-						}
-					})
+					// let content = []
+					// const custom_people_item_content = cheerio.load(cp_our_benefit_item_container('div').html())
+					// custom_people_item_content('p').each((index, elp) => {
+					// 	if (cheerio.load(elp).text().length > 45 && cheerio.load(elp).text() !== "                                            ") {
+					// 		// console.log(cheerio.load(elp).text())
+					// 		content.push(cheerio.load(elp).text())
+					// 	}
+					// })
 					// people.content = content
 					// console.log(benefit)
 					benefits.push(benefit)
@@ -204,7 +263,8 @@ async function crawler() {
 
 					// console.log(job('h4 a').text())
 					jobD.name = job('h4 a').text()
-					jobD.companyId = cp.companyId
+					listLinkjob.push(job('h4 a').attr('href'))
+					jobD.companyId = cp._id
 					jobD.jobId = uuid.v1()
 					job('ul li').each((index, el) => {
 						// console.log('index', index)
@@ -222,25 +282,21 @@ async function crawler() {
 
 					// console.log('---------1-----')
 					// console.log(jobD)
-					bulkJob.push({
-						index: {
-							_index: 'data_job',
-							_type: 'job'
-						}
-					})
-					bulkJob.push(jobD)
-					listJob.push(jobD)
+					letListjob.push(jobD)
+					// bulkJob.push({
+					// 	index: {
+					// 		_index: 'data_job',
+					// 		_type: 'job'
+					// 	}
+					// })
+					// bulkJob.push(jobD)
+					// listJob.push(jobD)
 				})
 
 				// console.log('listJob', listJob)
 			}
 			// console.log(cp)
-			const text = 'INSERT INTO companies(company_id,name,company_type,technologies,location,our_story,is_active,benefits) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *'
-			const values = [cp.companyId,cp.name,cp.company_type,cp.technologies,cp.location,cp.ourStory,true,cp.benefits]
-			clientPostgres.query(text,values, (err, res) => {
-				console.log(err, res)
-				clientPostgres.end()
-			})
+			await CompanyModel.create({ ...cp })
 			// bulk.push({
 			// 	index: {
 			// 		_index: 'data_job',
@@ -256,9 +312,35 @@ async function crawler() {
 			// 		console.log('Successfully imported %s', bulk.length)
 			// 	}
 			// })
+			console.log("end")
 
 		} catch (error) {
 			console.log(error)
+		}
+
+		for (let j = 0; j <= 0; j++) {
+			console.log(listLinkjob[j])
+			let link = listLinkjob[j]
+			let newString = link.replace('www.topitworks.com/en/job','www.vietnamworks.com')
+			console.log(newString)
+			newString = newString.replace('?utm_source=company_profile','-jd/?utm_source=company_profile')
+			console.log(newString)
+			try {
+				option = {
+					type: 'GET',
+
+					method: 'GET',
+
+				}
+
+				const data = await rp(newString)
+				console.log(data)
+				const $ = cheerio.load(data)
+
+			} catch (error) {
+				console.log('co loi')
+				break
+			}
 		}
 
 
@@ -274,4 +356,5 @@ async function crawler() {
 	}
 }
 
+// crawlerJob()
 crawler()
