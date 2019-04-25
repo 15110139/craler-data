@@ -265,7 +265,7 @@ async function crawler() {
 					jobD.name = job('h4 a').text()
 					listLinkjob.push(job('h4 a').attr('href'))
 					jobD.companyId = cp._id
-					jobD.jobId = uuid.v1()
+					jobD._id = uuid.v1()
 					job('ul li').each((index, el) => {
 						// console.log('index', index)
 						// console.log(cheerio.load(el).text().trim())'
@@ -319,11 +319,12 @@ async function crawler() {
 		}
 
 		for (let j = 0; j <= 0; j++) {
-			console.log(listLinkjob[j])
+			console.log('dddddddddd')
+			console.log(letListjob[j])
 			let link = listLinkjob[j]
-			let newString = link.replace('www.topitworks.com/en/job','www.vietnamworks.com')
+			let newString = link.replace('www.topitworks.com/en/job', 'www.vietnamworks.com')
 			console.log(newString)
-			newString = newString.replace('?utm_source=company_profile','-jd/?utm_source=company_profile')
+			newString = newString.replace('?utm_source=company_profile', '-jd/?utm_source=company_profile')
 			console.log(newString)
 			try {
 				option = {
@@ -332,13 +333,51 @@ async function crawler() {
 					method: 'GET',
 
 				}
-
+				let offer = []
 				const data = await rp(newString)
-				console.log(data)
+				// console.log(data)
 				const $ = cheerio.load(data)
+				if ($('div.div.benefits').data() !== undefined) {
+					const benefits = cheerio.load($('div.benefits').html())
+					benefits('div.benefit').each((index, el) => {
+						const el_che = cheerio.load(el)
+						console.log(el_che('div.benefit-name').text().trim())
+					})
+				}
+
+				letListjob[j].require = null
+				if ($('div.requirements').data() !== undefined) {
+					const requirements = cheerio.load($('div.requirements').html())
+					// console.log(requirements.text())
+					letListjob[j].require = requirements.text()
+				}
+				letListjob[j].skill = null
+				letListjob[j].jobCategory = null
+
+				if (
+					$('div.box-summary').data() !== undefined
+				) {
+					const sumary = cheerio.load($('div.box-summary').html())
+					sumary('div.summary-item').each((index, el) => {
+						const el_post = cheerio.load(el)
+						if (index == 2) {
+							console.log(el_post('div.summary-content span.content').text().trim())
+							letListjob[j].jobCategory = el_post('div.summary-content span.content').text().trim()
+						}
+						if (index == 3) {
+							console.log(el_post('div.summary-content span.content').text().trim())
+							letListjob[j].skill = el_post('div.summary-content span.content').text().trim()
+						}
+					})
+				}
+				// skill_tags('a').each((index,el)=>{
+				// 	console.log(index)
+				// 	console.log(el.text())
+				// })
+				console.log(letListjob[j])
 
 			} catch (error) {
-				console.log('co loi')
+				console.log('co loi', error)
 				break
 			}
 		}
