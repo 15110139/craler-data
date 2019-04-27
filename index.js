@@ -328,22 +328,40 @@ async function crawler() {
 			console.log(newString)
 			try {
 				option = {
-					type: 'GET',
-
 					method: 'GET',
+					headers: {
+						'Cookie': 'lang=2; suggest_course_ab_testing_reset=6; suggest_course_ab_testing=B; user_on_board_ab_testing_reset=3; user_on_board_ab_testing=A; _gcl_au=1.1.1414326183.1556198415; _fbp=fb.1.1556198415886.1820782094; __utmv=136564663.|1=Job%20Detail%20Display=VB=1; VNW128450527232960=bs%2Bd1JzZyseKkHuLcMqd05uunJqIiqqIcJub03CnzZRaknmGaqKj; VNWJSAll128450527232960=bs%2Bd1JzZyseKkHuLcMqd05uunJqIiqqIcJub03CnzZRaknmGaqKj%7Cvffj1r014i1ak30ifrrrnmvg32; VNWWS128450527232960=ksCzoYanust0oJiGh%2BO024bisspz05W%2Fkr3O1oanus9zi5G%2Bhpuv5pK50M10ra%2B%2Fhq2754bvvdx1rZyKktOzoYfMvdmArZSJhuOs14fJ0Mp%2F06qHiLrmu6K%2BmK9tr7Cva7rhu7K%2Bm69YrsGvkLacx4zL06%2BgmnekfavXu4%2FH1a%2BQxa%2Bks77iyIzCm6%2BTr7GwgLPVu2rD07CgxHmwjbLhvIzZ1a%2BgwL6wfczkx4k%3D; VNW_WS_COOKIE=ksCzoYanust0oJiGh%2BO024bisspz05W%2Fkr3O1oanus9zi5G%2Bhpuv5pK50M10ra%2B%2Fhq2754bvvdx1rZyKktOzoYfMvdmArZSJhuOs14fJ0Mp%2F06qHiLrmu6K%2BmK9tr7Cva7rhu7K%2Bm69YrsGvkLacx4zL06%2BgmnekfavXu4%2FH1a%2BQxa%2Bks77iyIzCm6%2BTr7GwgLPVu2rD07CgxHmwjbLhvIzZ1a%2BgwL6wfczkx4k%3D; VNW_USER_COOKIE=bs%2Bd1JzZyseKkHuLcMqd05uunJqIiqqIcJub03CnzZRaknmGaqKj; PHPSESSID=11fit25fh06rm5v9mv72ub9ad7; VNW_LAST_JOB_SEEN=1090101%2C4920199; __utma=136564663.492321141.1556198415.1556198415.1556387230.2; __utmc=136564663; __utmz=136564663.1556387230.2.2.utmcsr=company_profile|utmccn=(not%20set)|utmcmd=(not%20set); FIREBASE_JWT=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ2aWV0bmFtd29ya3MtbWVzc2FnZUB2aWV0bmFtd29ya3MtbWVzc2FnZS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInN1YiI6InZpZXRuYW13b3Jrcy1tZXNzYWdlQHZpZXRuYW13b3Jrcy1tZXNzYWdlLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6XC9cL2lkZW50aXR5dG9vbGtpdC5nb29nbGVhcGlzLmNvbVwvZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJpYXQiOjE1NTYzODcyMzMsImV4cCI6MTU1NjM5MDgzMywidWlkIjo0OTIwMTk5fQ.GNZPQNp-hG65FxcYFyJd8zGJ2P05tUacevRRL38TUnQS8Nm62883H9LdMtHbvAvg2Q_vbTufKPLBuDnBqZ3wnCkGdSSaXDRwoqael3IfPMrdwOv0YbDj8XhN3KRjrVx5soIGlDbZ3ybyN8J_t2olnJvstHAezyis86CzkTftIy4YpOk88ZpA5FZEir-Aj2kQK8b4RdK-uk0uHlJNAXa6-r2kgCswltOIas8q5AGpktZBmUQHgYsUHyaWEl82tSsRjlOCN2bgHONIXwI0YrT6Ha-1KjhAizazVhARivRDHrQ1DlvxmJ_5nTXFStNyIDM7xjm7u8KmkHEXX32tervI3w; __utmt=1; __utmb=136564663.5.10.1556387230'
+					},
 
 				}
+				letListjob[j].offer = null
 				let offer = []
-				const data = await rp(newString)
+				const data = await rp(newString, option)
 				// console.log(data)
 				const $ = cheerio.load(data)
-				if ($('div.div.benefits').data() !== undefined) {
+				if ($('div.benefits').data() !== undefined) {
+					console.log('------ddddddddddddd--')
 					const benefits = cheerio.load($('div.benefits').html())
 					benefits('div.benefit').each((index, el) => {
 						const el_che = cheerio.load(el)
-						console.log(el_che('div.benefit-name').text().trim())
+						offer.push(el_che('div.benefit-name').text().trim())
 					})
 				}
+				if ($('div.benefits').data() !== undefined) {
+					console.log('------ddddddddddddd--')
+					const benefits = cheerio.load($('div.benefits').html())
+					benefits('div.benefit').each((index, el) => {
+						const el_che = cheerio.load(el)
+						offer.push(el_che('div.benefit-name').text().trim())
+					})
+				}
+				letListjob[j].salary = 'Negotiable'
+				if ($('span.salary').data() !== undefined) {
+					console.log('sdsd')
+					letListjob[j].salary = $('span.salary').text()
+
+				}
+				letListjob[j].offer = offer
 
 				letListjob[j].require = null
 				if ($('div.requirements').data() !== undefined) {
@@ -375,6 +393,7 @@ async function crawler() {
 				// 	console.log(el.text())
 				// })
 				console.log(letListjob[j])
+
 
 			} catch (error) {
 				console.log('co loi', error)
