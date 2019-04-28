@@ -31,6 +31,7 @@ var Job = new Schema({
 var Company = new Schema({
 	_id: String,
 	name: String,
+	urlLogo:String,
 	technologies: [String],
 	companyType: String,
 	location: [String],
@@ -56,7 +57,7 @@ const client = new elasticsearch.Client({
 async function crawler() {
 	let listCopany = []
 	let listCompanytype = []
-	for (i = 0; i <= 0; i++) {
+	for (i = 0; i <= 20; i++) {
 		try {
 			console.log('hhihi')
 			option = {
@@ -99,7 +100,7 @@ async function crawler() {
 	let letListjob = []
 	let listLinkjob = []
 
-	for (i = 0; i <= 0; i++) {
+	for (i = 0; i <= 150; i++) {
 		try {
 			console.log('------------------------------------------------', i, listCopany[i])
 			const cp = {}
@@ -109,6 +110,7 @@ async function crawler() {
 			const cp_company_name = $('#cp_company_name')
 
 			const company_type = $('span.company_type')
+
 			if (company_type.data() !== undefined) {
 				// console.log(company_type.text())
 				cp.company_type = company_type.text()
@@ -118,6 +120,14 @@ async function crawler() {
 			if (cp_company_name.data() !== undefined) {
 				// console.log(cp_company_name.text())
 				cp.name = cp_company_name.text()
+			}
+
+
+			console.log('------------logo--------------')
+			if ($('div.cp_logo').data() !== undefined) {
+				console.log($('.cp_logo div img').attr('src'))
+				
+				cp.urlLogo = $('.cp_logo div img').attr('src')
 			}
 
 			// cp.company_type = listCompanytype[i]
@@ -190,15 +200,15 @@ async function crawler() {
 					let people = {}
 					const cp_our_people_item_content = cheerio.load(el)
 					// console.log(cp_story_item_content('h2').text())
-					people.name = cp_our_people_item_content('h2').text()
-					people.position = cp_our_people_item_content('h3').text()
+					people.name = cp_our_people_item_content('h2').text().trim()
+					people.position = cp_our_people_item_content('h3').text().trim()
 
 					let content = []
 					const custom_people_item_content = cheerio.load(cp_our_people_item_content('div').html())
 					custom_people_item_content('p').each((index, elp) => {
 						if (cheerio.load(elp).text().length > 45 && cheerio.load(elp).text() !== "                                            ") {
 							// console.log(cheerio.load(elp).text())
-							content.push(cheerio.load(elp).text())
+							content.push(cheerio.load(elp).text().trim())
 						}
 					})
 					people.content = content
@@ -220,7 +230,7 @@ async function crawler() {
 					const cp_our_benefit_item_container = cheerio.load(el)
 					// console.log(cp_story_item_content('h2').text())
 					benefit.title = cp_our_benefit_item_container('div.cp_benefit_name h3').text()
-					benefit.description = cp_our_benefit_item_container('div.cp_benefit_description p').text()
+					benefit.description = cp_our_benefit_item_container('div.cp_benefit_description p').text().trim()
 
 					// let content = []
 					// const custom_people_item_content = cheerio.load(cp_our_benefit_item_container('div').html())
@@ -334,7 +344,7 @@ async function crawler() {
 				}
 				letListjob[j].salary = 'Negotiable'
 				if ($('span.salary').data() !== undefined) {
-					letListjob[j].salary = $('span.salary').text()
+					letListjob[j].salary = $('span.salary').text().trim()
 
 				}
 				letListjob[j].offer = offer
@@ -343,7 +353,7 @@ async function crawler() {
 				if ($('div.requirements').data() !== undefined) {
 					const requirements = cheerio.load($('div.requirements').html())
 					// console.log(requirements.text())
-					letListjob[j].require = requirements.text()
+					letListjob[j].require = requirements.text().trim()
 				}
 				letListjob[j].skill = null
 				letListjob[j].jobCategory = null
