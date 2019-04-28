@@ -6,23 +6,28 @@ mongoose.connect('mongodb://localhost/find_job', { useNewUrlParser: true });
 const elasticsearch = require('elasticsearch')
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-var People = {
+var Job = new Schema({
+	_id: String,
+	offer: [String],
+
+	decs: [String],
+
+	require: [String],
+
 	name: String,
-	position: String,
-	content: [String],
-}
 
-var Story = {
-	title: String,
-	content: [String],
+	skill: [String],
 
-}
+	salary: String,
 
-var Benefit = {
-	title: String,
-	description: String,
-}
+	isActive: {
+		type: Boolean,
+		default: true
+	}
 
+
+
+})
 var Company = new Schema({
 	_id: String,
 	name: String,
@@ -38,7 +43,7 @@ var Company = new Schema({
 	}
 
 });
-
+var JobModel = mongoose.model('Job', Job)
 var CompanyModel = mongoose.model('Company', Company);
 
 
@@ -47,26 +52,6 @@ const client = new elasticsearch.Client({
 	log: 'trace'
 })
 
-async function crawlerJob() {
-
-	for (i = 0; i <= 0; i++) {
-		try {
-			option = {
-				type: 'GET',
-
-				method: 'GET',
-
-			}
-			const data = await rp('https://www.vietnamworks.com/recruitment-specialist-chuyen-vien-tuyen-dung-2-1090101-jd/?utm_source=company_profile')
-			console.log(data)
-			const $ = cheerio.load(data)
-
-		} catch (error) {
-			console.log('co loi', error)
-			break
-		}
-	}
-}
 
 async function crawler() {
 	let listCopany = []
@@ -279,10 +264,10 @@ async function crawler() {
 							jobD.datePost = cheerio.load(el).text().trim()
 						}
 					})
+					letListjob.push(jobD)
 
 					// console.log('---------1-----')
 					// console.log(jobD)
-					letListjob.push(jobD)
 					// bulkJob.push({
 					// 	index: {
 					// 		_index: 'data_job',
@@ -290,36 +275,28 @@ async function crawler() {
 					// 	}
 					// })
 					// bulkJob.push(jobD)
-					// listJob.push(jobD)
 				})
 
 				// console.log('listJob', listJob)
 			}
 			// console.log(cp)
 			await CompanyModel.create({ ...cp })
-			// bulk.push({
-			// 	index: {
-			// 		_index: 'data_job',
-			// 		_type: 'company'
-			// 	}
-			// })
-			// bulk.push(cp)
-			// console.log("job")
-			// client.bulk({ body: bulkJob }, function (err, response) {
-			// 	if (err) {
-			// 		console.log('Failed Bulk operation'.red, err)
-			// 	} else {
-			// 		console.log('Successfully imported %s', bulk.length)
-			// 	}
-			// })
-			console.log("end")
+			bulk.push({
+				index: {
+					_index: 'data_job',
+					_type: 'company'
+				}
+			})
+			cp.companyId = cp._id
+			delete cp._id
+			bulk.push(cp)
+
 
 		} catch (error) {
 			console.log(error)
 		}
 
 		for (let j = 0; j <= 0; j++) {
-			console.log('dddddddddd')
 			console.log(letListjob[j])
 			let link = listLinkjob[j]
 			let newString = link.replace('www.topitworks.com/en/job', 'www.vietnamworks.com')
@@ -357,7 +334,6 @@ async function crawler() {
 				}
 				letListjob[j].salary = 'Negotiable'
 				if ($('span.salary').data() !== undefined) {
-					console.log('sdsd')
 					letListjob[j].salary = $('span.salary').text()
 
 				}
@@ -393,7 +369,16 @@ async function crawler() {
 				// 	console.log(el.text())
 				// })
 				console.log(letListjob[j])
-
+				JobModel.create({ ...letListjob[j] })
+				bulkJob.push({
+					index: {
+						_index: 'data_job',
+						_type: 'job'
+					}
+				})
+				letListjob[j].jobId = letListjob[j]._id
+				delete letListjob[j]._id
+				bulkJob.push(letListjob[j])
 
 			} catch (error) {
 				console.log('co loi', error)
@@ -402,15 +387,25 @@ async function crawler() {
 		}
 
 
-		// console.log("company")
-		// client.bulk({ body: bulk }, function (err, response) {
-		// 	//perform bulk indeing of the data passed
-		// 	if (err) {
-		// 		console.log('Failed Bulk operation'.red, err)
-		// 	} else {
-		// 		console.log('Successfully imported %s', bulk.length)
-		// 	}
-		// })
+		console.log("company")
+		client.bulk({ body: bulk }, function (err, response) {
+			//perform bulk indeing of the data passed
+			if (err) {
+				console.log('Failed Bulk operation'.red, err)
+			} else {
+				console.log('Successfully imported %s', bulk.length)
+			}
+		})
+
+		console.log("job")
+		client.bulk({ body: bulkJob }, function (err, response) {
+			if (err) {
+				console.log('Failed Bulk operation'.red, err)
+			} else {
+				console.log('Successfully imported %s', bulk.length)
+			}
+		})
+		console.log("end")
 	}
 }
 
