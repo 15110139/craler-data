@@ -7,6 +7,10 @@ mongoose.connect('mongodb://localhost/find_job', { useNewUrlParser: true });
 const elasticsearch = require('elasticsearch')
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var Skill = new Schema({
+	id: String,
+	name: String
+})
 var Job = new Schema({
 	id: String,
 	company: Object,
@@ -15,7 +19,7 @@ var Job = new Schema({
 	require: [String],
 	name: String,
 	skill: [String],
-	created_at:Number,
+	created_at: Number,
 	salary: Object,
 	jobCategory: [String],
 	isActive: {
@@ -41,11 +45,12 @@ var Company = new Schema({
 });
 var JobModel = mongoose.model('Job', Job)
 var CompanyModel = mongoose.model('Company', Company);
+var SkillModel = mongoose.model('Skill', Skill)
+
 
 
 const client = new elasticsearch.Client({
 	host: 'localhost:9200',
-	log: 'trace'
 })
 
 client.indices.create({
@@ -60,8 +65,8 @@ client.indices.create({
 
 async function crawler() {
 	let listCopany = []
-	let listCompanytype = []
-	for (i = 0; i <= 2; i++) {
+	let allKill = []
+	for (i = 0; i <= 20; i++) {
 		try {
 			console.log('hhihi')
 			option = {
@@ -101,7 +106,7 @@ async function crawler() {
 	let letListjob = []
 	let listLinkjob = []
 
-	for (i = 0; i <= 10; i++) {
+	for (i = 0; i <= 150; i++) {
 		try {
 			console.log('------------------------------------------------', i, listCopany[i])
 			const cp = {}
@@ -300,7 +305,7 @@ async function crawler() {
 			delete cp.id
 
 			await client.index({
-				index: 'blog',
+				index: 'data_job',
 				id: cp.companyId,
 				type: 'company',
 				body: { ...cp }
@@ -331,9 +336,8 @@ async function crawler() {
 	// 		console.log('Successfully imported %s', bulk.length)
 	// 	}
 	// })
-	console.log("lentjob", letListjob.length)
 
-	for (let j = 0; j < letListjob.length; j++) {
+	for (let j = 0; j < listLinkjob[j].length; j++) {
 		console.log("----------------------------------job ----- detail ---------------------------------")
 		let link = listLinkjob[j]
 		console.log("link", link)
@@ -405,7 +409,9 @@ async function crawler() {
 					if (index == 3) {
 						console.log(el_post('div.summary-content span.content').text().trim())
 						const stringSkill = el_post('div.summary-content span.content').text().trim()
-						letListjob[j].skill = stringSkill.split(',')
+						const arrskll = stringSkill.split(',')
+						letListjob[j].skill = arrskll
+						allKill = [...allKill, ...arrskll]
 					}
 				})
 			}
@@ -455,6 +461,25 @@ async function crawler() {
 	// 		console.log('Successfully imported %s', bulk.length)
 	// 	}
 	// })
+
+	let skillChoose = []
+	for (let o = 0; o < allKill.length; o++) {
+		try {
+			console.log("---------------All---skilll--------------------------")
+			if (!skillChoose.includes(allKill[o])) {
+				skillChoose.push(allKill[o])
+				await SkillModel.create({ id: 'skill_' + uuid.v1(), name: allKill[o] })
+
+			}
+		} catch (error) {
+			console.log('hihi')
+		}
+	}
+
+
+
+
+
 	console.log("----------------------end----------------------------------")
 }
 
