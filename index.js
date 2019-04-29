@@ -393,7 +393,7 @@ async function crawler() {
 				const sumary = cheerio.load($('div.box-summary').html())
 				sumary('div.summary-item').each((index, el) => {
 					const el_post = cheerio.load(el)
-					if (index == 2) {
+					if (index == 0) {
 						console.log(el_post('div.summary-content span.content').text().trim())
 						letListjob[j].created_at = moment(el_post('div.summary-content span.content').text().trim(), 'DD/MM/YYYY').valueOf()
 					}
