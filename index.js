@@ -10,13 +10,14 @@ var Schema = mongoose.Schema;
 var Job = new Schema({
 	id: String,
 	company: Object,
-	offer: [String],
-	desc: String,
-	require: String,
+	benefit: [String],
+	desc: [String],
+	require: [String],
 	name: String,
-	skill: String,
+	skill: [String],
+	created_at:Number,
 	salary: Object,
-	jobCategory: String,
+	jobCategory: [String],
 	isActive: {
 		type: Boolean,
 		default: true
@@ -60,7 +61,7 @@ client.indices.create({
 async function crawler() {
 	let listCopany = []
 	let listCompanytype = []
-	for (i = 0; i <= 56; i++) {
+	for (i = 0; i <= 2; i++) {
 		try {
 			console.log('hhihi')
 			option = {
@@ -100,11 +101,11 @@ async function crawler() {
 	let letListjob = []
 	let listLinkjob = []
 
-	for (i = 0; i <= 150; i++) {
+	for (i = 0; i <= 10; i++) {
 		try {
 			console.log('------------------------------------------------', i, listCopany[i])
 			const cp = {}
-			cp.id = uuid.v1()
+			cp.id = "company_" + uuid.v1()
 			const data = await rp(listCopany[i])
 			const $ = cheerio.load(data)
 			const cp_company_name = $('#cp_company_name')
@@ -263,7 +264,7 @@ async function crawler() {
 					// console.log(job('h4 a').text())
 					jobD.name = job('h4 a').text()
 					listLinkjob.push(job('h4 a').attr('href'))
-					jobD.id = uuid.v1()
+					jobD.id = 'job_' + uuid.v1()
 					job('ul li').each((index, el) => {
 						// console.log('index', index)
 						// console.log(cheerio.load(el).text().trim())'
@@ -346,8 +347,8 @@ async function crawler() {
 				},
 
 			}
-			letListjob[j].offer = null
-			let offer = []
+			letListjob[j].benefit = null
+			let benefit = []
 			const data = await rp(newString, option)
 			// console.log(data)
 			const $ = cheerio.load(data)
@@ -355,7 +356,7 @@ async function crawler() {
 				const benefits = cheerio.load($('div.benefits').html())
 				benefits('div.benefit').each((index, el) => {
 					const el_che = cheerio.load(el)
-					offer.push(el_che('div.benefit-name').text().trim())
+					benefit.push(el_che('div.benefit-name').text().trim())
 				})
 			}
 			letListjob[j].salary = {
@@ -368,21 +369,23 @@ async function crawler() {
 			// 	letListjob[j].salary = $('span.salary').text().trim()
 
 			// }
-			letListjob[j].offer = offer
-			letListjob[j].require = null
+			letListjob[j].benefit = benefit
+			letListjob[j].require = []
 			if ($('div.requirements').data() !== undefined) {
 				const requirements = cheerio.load($('div.requirements').html())
 				// console.log(requirements.text())
-				letListjob[j].require = requirements.text().trim()
+				const stringRequire = requirements.text().trim()
+				letListjob[j].require = stringRequire.split(`\n`)
 			}
-			letListjob[j].desc = ''
+			letListjob[j].desc = []
 			if ($('div.description').data() !== undefined) {
 				const description = cheerio.load($('div.description').html())
 				// console.log(requirements.text())
-				letListjob[j].desc = description.text().trim()
+				const descString = description.text().trim()
+				letListjob[j].desc = descString.split(`\n`)
 			}
-			letListjob[j].skill = null
-			letListjob[j].jobCategory = null
+			letListjob[j].skill = []
+			letListjob[j].jobCategory = []
 
 			if (
 				$('div.box-summary').data() !== undefined
@@ -396,11 +399,13 @@ async function crawler() {
 					}
 					if (index == 2) {
 						console.log(el_post('div.summary-content span.content').text().trim())
-						letListjob[j].jobCategory = el_post('div.summary-content span.content').text().trim()
+						const stringjobCategory = el_post('div.summary-content span.content').text().trim()
+						letListjob[j].jobCategory = stringjobCategory.split(',')
 					}
 					if (index == 3) {
 						console.log(el_post('div.summary-content span.content').text().trim())
-						letListjob[j].skill = el_post('div.summary-content span.content').text().trim()
+						const stringSkill = el_post('div.summary-content span.content').text().trim()
+						letListjob[j].skill = stringSkill.split(',')
 					}
 				})
 			}
