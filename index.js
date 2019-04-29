@@ -395,7 +395,7 @@ async function crawler() {
 					const el_post = cheerio.load(el)
 					if (index == 2) {
 						console.log(el_post('div.summary-content span.content').text().trim())
-						letListjob[j].create_at = moment(el_post('div.summary-content span.content').text().trim(), 'DD/MM/YYYY').valueOf()
+						letListjob[j].created_at = moment(el_post('div.summary-content span.content').text().trim(), 'DD/MM/YYYY').valueOf()
 					}
 					if (index == 2) {
 						console.log(el_post('div.summary-content span.content').text().trim())
