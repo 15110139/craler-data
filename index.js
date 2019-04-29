@@ -54,7 +54,18 @@ const client = new elasticsearch.Client({
 })
 
 client.indices.create({
-	index: 'data_job'
+	index: 'company'
+}, function (err, resp, status) {
+	if (err) {
+		console.log(err);
+	} else {
+		console.log("create", resp);
+	}
+});
+
+
+client.indices.create({
+	index: 'job'
 }, function (err, resp, status) {
 	if (err) {
 		console.log(err);
@@ -305,7 +316,7 @@ async function crawler() {
 			delete cp.id
 
 			await client.index({
-				index: 'data_job',
+				index: 'company',
 				id: cp.companyId,
 				type: 'company',
 				body: { ...cp }
@@ -424,7 +435,7 @@ async function crawler() {
 			delete letListjob[j].id
 
 			await client.index({
-				index: 'data_job',
+				index: 'job',
 				id: letListjob[j].jobId,
 				type: 'job',
 				body: {
