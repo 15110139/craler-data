@@ -2,34 +2,28 @@ var cheerio = require('cheerio')
 var rp = require('request-promise')
 var uuid = require('uuid')
 var mongoose = require('mongoose');
+var moment = require('moment')
 mongoose.connect('mongodb://localhost/find_job', { useNewUrlParser: true });
 const elasticsearch = require('elasticsearch')
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var Job = new Schema({
-	_id: String,
+	id: String,
+	company: Object,
 	offer: [String],
-
-	decs: [String],
-
-	require: [String],
-
+	desc: String,
+	require: String,
 	name: String,
-
-	skill: [String],
-
-	salary: String,
-	jobCategory: [String],
+	skill: String,
+	salary: Object,
+	jobCategory: String,
 	isActive: {
 		type: Boolean,
 		default: true
 	}
-
-
-
 })
 var Company = new Schema({
-	_id: String,
+	id: String,
 	name: String,
 	urlLogo: String,
 	technologies: [String],
@@ -62,8 +56,6 @@ client.indices.create({
 		console.log("create", resp);
 	}
 });
-
-
 
 async function crawler() {
 	let listCopany = []
@@ -112,7 +104,7 @@ async function crawler() {
 		try {
 			console.log('------------------------------------------------', i, listCopany[i])
 			const cp = {}
-			cp._id = uuid.v1()
+			cp.id = uuid.v1()
 			const data = await rp(listCopany[i])
 			const $ = cheerio.load(data)
 			const cp_company_name = $('#cp_company_name')
@@ -227,7 +219,6 @@ async function crawler() {
 
 			}
 			console.log('-------------Benefits--------------------')
-
 			if ($('div.cp_our_benefits_container').data() !== undefined) {
 				let benefits = []
 				const cp_our_benefits_container = cheerio.load($('div.cp_our_benefits_container').html())
@@ -261,13 +252,18 @@ async function crawler() {
 				const listJob = []
 				cp_our_job_item.each((index, el) => {
 					const job = cheerio.load(el)
-					const jobD = {}
+					const jobD = {
+						company: {
+							id: cp.id,
+							name: cp.name,
+							avatar: cp.urlLogo
+						}
+					}
 
 					// console.log(job('h4 a').text())
 					jobD.name = job('h4 a').text()
 					listLinkjob.push(job('h4 a').attr('href'))
-					jobD.companyId = cp._id
-					jobD._id = uuid.v1()
+					jobD.id = uuid.v1()
 					job('ul li').each((index, el) => {
 						// console.log('index', index)
 						// console.log(cheerio.load(el).text().trim())'
@@ -299,8 +295,8 @@ async function crawler() {
 			// console.log(cp)
 			await CompanyModel.create({ ...cp })
 
-			cp.companyId = cp._id
-			delete cp._id
+			cp.companyId = cp.id
+			delete cp.id
 
 			await client.index({
 				index: 'blog',
@@ -316,8 +312,8 @@ async function crawler() {
 			// 		_type: 'company',
 			// 	}
 			// })
-			// cp.companyId = cp._id
-			// delete cp._id
+			// cp.companyId = cp.id
+			// delete cp.id
 			// bulk.push(cp)
 			// console.log(cp)
 
@@ -362,24 +358,28 @@ async function crawler() {
 					offer.push(el_che('div.benefit-name').text().trim())
 				})
 			}
-			if ($('div.benefits').data() !== undefined) {
-				const benefits = cheerio.load($('div.benefits').html())
-				benefits('div.benefit').each((index, el) => {
-					const el_che = cheerio.load(el)
-					offer.push(el_che('div.benefit-name').text().trim())
-				})
+			letListjob[j].salary = {
+				from: (Math.floor(Math.random() * 5) + 1) * 100,
+				to: (Math.floor(Math.random() * 5) + 7) * 100,
+				currency: 'USD'
 			}
-			letListjob[j].salary = 'Negotiable'
-			if ($('span.salary').data() !== undefined) {
-				letListjob[j].salary = $('span.salary').text().trim()
+			// letListjob[j].salary = 'Negotiable'
+			// if ($('span.salary').data() !== undefined) {
+			// 	letListjob[j].salary = $('span.salary').text().trim()
 
-			}
+			// }
 			letListjob[j].offer = offer
 			letListjob[j].require = null
 			if ($('div.requirements').data() !== undefined) {
 				const requirements = cheerio.load($('div.requirements').html())
 				// console.log(requirements.text())
 				letListjob[j].require = requirements.text().trim()
+			}
+			letListjob[j].desc = ''
+			if ($('div.description').data() !== undefined) {
+				const description = cheerio.load($('div.description').html())
+				// console.log(requirements.text())
+				letListjob[j].desc = description.text().trim()
 			}
 			letListjob[j].skill = null
 			letListjob[j].jobCategory = null
@@ -390,6 +390,10 @@ async function crawler() {
 				const sumary = cheerio.load($('div.box-summary').html())
 				sumary('div.summary-item').each((index, el) => {
 					const el_post = cheerio.load(el)
+					if (index == 2) {
+						console.log(el_post('div.summary-content span.content').text().trim())
+						letListjob[j].create_at = moment(el_post('div.summary-content span.content').text().trim(), 'DD/MM/YYYY').valueOf()
+					}
 					if (index == 2) {
 						console.log(el_post('div.summary-content span.content').text().trim())
 						letListjob[j].jobCategory = el_post('div.summary-content span.content').text().trim()
@@ -405,8 +409,8 @@ async function crawler() {
 			// 	console.log(el.text())
 			// })
 			await JobModel.create({ ...letListjob[j] })
-			letListjob[j].jobId = letListjob[j]._id
-			delete letListjob[j]._id
+			letListjob[j].jobId = letListjob[j].id
+			delete letListjob[j].id
 
 			await client.index({
 				index: 'data_job',
@@ -415,7 +419,7 @@ async function crawler() {
 				body: {
 					...letListjob[j]
 				}
-			}, function(err, resp, status) {
+			}, function (err, resp, status) {
 				console.log(resp);
 			});
 			// bulkJob.push({
@@ -424,8 +428,8 @@ async function crawler() {
 			// 		_type: 'job',
 			// 	}
 			// })
-			// letListjob[j].jobId = letListjob[j]._id
-			// delete letListjob[j]._id
+			// letListjob[j].jobId = letListjob[j].id
+			// delete letListjob[j].id
 			// bulkJob.push(letListjob[j])
 			console.log(letListjob[j])
 
