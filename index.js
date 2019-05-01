@@ -53,26 +53,26 @@ const client = new elasticsearch.Client({
 	host: 'localhost:9200',
 })
 
-client.indices.create({
-	index: 'company'
-}, function (err, resp, status) {
-	if (err) {
-		console.log(err);
-	} else {
-		console.log("create", resp);
-	}
-});
+// client.indices.create({
+// 	index: 'company'
+// }, function (err, resp, status) {
+// 	if (err) {
+// 		console.log(err);
+// 	} else {
+// 		console.log("create", resp);
+// 	}
+// });
 
 
-client.indices.create({
-	index: 'job'
-}, function (err, resp, status) {
-	if (err) {
-		console.log(err);
-	} else {
-		console.log("create", resp);
-	}
-});
+// client.indices.create({
+// 	index: 'job'
+// }, function (err, resp, status) {
+// 	if (err) {
+// 		console.log(err);
+// 	} else {
+// 		console.log("create", resp);
+// 	}
+// });
 
 async function crawler() {
 	let listCopany = []
@@ -315,14 +315,14 @@ async function crawler() {
 			cp.companyId = cp.id
 			delete cp.id
 
-			await client.index({
-				index: 'company',
-				id: cp.companyId,
-				type: 'company',
-				body: { ...cp }
-			}, function (err, resp, status) {
-				console.log(resp);
-			});
+			// await client.index({
+			// 	index: 'company',
+			// 	id: cp.companyId,
+			// 	type: 'company',
+			// 	body: { ...cp }
+			// }, function (err, resp, status) {
+			// 	console.log(resp);
+			// });
 			// bulk.push({
 			// 	index: {
 			// 		_index: 'data_job',
@@ -434,16 +434,16 @@ async function crawler() {
 			letListjob[j].jobId = letListjob[j].id
 			delete letListjob[j].id
 
-			await client.index({
-				index: 'job',
-				id: letListjob[j].jobId,
-				type: 'job',
-				body: {
-					...letListjob[j]
-				}
-			}, function (err, resp, status) {
-				console.log(resp);
-			});
+			// await client.index({
+			// 	index: 'job',
+			// 	id: letListjob[j].jobId,
+			// 	type: 'job',
+			// 	body: {
+			// 		...letListjob[j]
+			// 	}
+			// }, function (err, resp, status) {
+			// 	console.log(resp);
+			// });
 			// bulkJob.push({
 			// 	index: {
 			// 		_index: 'data_job',
@@ -480,7 +480,6 @@ async function crawler() {
 			if (!skillChoose.includes(allKill[o])) {
 				skillChoose.push(allKill[o])
 				await SkillModel.create({ id: 'skill_' + uuid.v1(), name: allKill[o] })
-
 			}
 		} catch (error) {
 			console.log('hihi')
