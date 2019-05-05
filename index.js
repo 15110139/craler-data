@@ -464,6 +464,7 @@ async function crawler() {
 						console.log(el_post('div.summary-content span.content').text().trim())
 						const stringSkill = el_post('div.summary-content span.content').text().trim()
 						const arrskll = stringSkill.split(',')
+
 						letListjob[j].skill = arrskll
 						allKill = [...allKill, ...arrskll]
 					}
@@ -517,12 +518,16 @@ async function crawler() {
 	// })
 
 	let skillChoose = []
-	for (let o = 0; o < allKill.length; o++) {
+	let newList = []
+	for (m = 0; m < allKill.length; m++) {
+		newList.push(allKill[m].trim())
+	}
+	for (let o = 0; o < newList.length; o++) {
 		try {
 			console.log("---------------All---skilll--------------------------")
-			if (!skillChoose.includes(allKill[o])) {
-				skillChoose.push(allKill[o])
-				await SkillModel.create({ id: 'skill_' + uuid.v1(), name: allKill[o] })
+			if (!skillChoose.includes(newList[o])) {
+				skillChoose.push(newList[o])
+				await SkillModel.create({ id: 'skill_' + uuid.v1(), name: newList[o] })
 			}
 		} catch (error) {
 			console.log('hihi')
