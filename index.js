@@ -4,7 +4,7 @@ var uuid = require('uuid')
 var mongoose = require('mongoose');
 var moment = require('moment')
 mongoose.connect('mongodb://localhost/find_job', { useNewUrlParser: true });
-const elasticsearch = require('elasticsearch')
+// const elasticsearch = require('elasticsearch')
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var Skill = new Schema({
@@ -33,7 +33,8 @@ var Company = new Schema({
 	urlLogo: String,
 	technologies: [String],
 	companyType: String,
-	location: [String],
+	address: [String],
+	location: [Object],
 	ourPeople: [Object],
 	ourStory: [Object],
 	benefits: [Object],
@@ -43,15 +44,27 @@ var Company = new Schema({
 	}
 
 });
+const STRINGHH = ["Ha Noi", "HN", "Hà Nội", "HA NOI", "HÀ NỘI",]
+const STRINGHCM = ["Ho Chi Minh", "HCM", "Hồ Chí Minh", "HO CHI MINH", "HỒ CHÍ MINH", "TPHCM"]
+const STRINGDANANG = ["Da Nang", "DN", "Đà Nẵng", "DA NANG", "ĐÀ NẴNG"]
+const STRINGCANTHO = ["Can Tho", "CT", "Cần Thơ", "CAN THO", "CẦN THƠ"]
+const STRINGBINHDUONG = ["Binh Duong", "DB", "Bình Dương", "BINH DUONG", "BÌNH DƯƠNG"]
+
+var Location = new Schema({
+	id: String,
+	name: String
+})
+var LocationModel = mongoose.model('Location', Location)
 var JobModel = mongoose.model('Job', Job)
 var CompanyModel = mongoose.model('Company', Company);
 var SkillModel = mongoose.model('Skill', Skill)
 
 
 
-const client = new elasticsearch.Client({
-	host: 'localhost:9200',
-})
+
+// const client = new elasticsearch.Client({
+// 	host: 'localhost:9200',
+// })
 
 // client.indices.create({
 // 	index: 'company'
@@ -74,7 +87,16 @@ const client = new elasticsearch.Client({
 // 	}
 // });
 
+
 async function crawler() {
+	const objectHaNoi = await LocationModel.create({ id: "location_" + uuid.v1(), name: "Hà Nội" })
+	const objectDaNang = await LocationModel.create({ id: "location_" + uuid.v1(), name: "Đà Nẵng" })
+	const objectBinhHDuong = await LocationModel.create({ id: "location_" + uuid.v1(), name: "Bình Dương" })
+	const objectHoChiMinh = await LocationModel.create({ id: "location_" + uuid.v1(), name: "Hồ Chí Minh" })
+	const objectCanTho = await LocationModel.create({ id: "location_" + uuid.v1(), name: "Cần Thơ" })
+	const objectOther = await LocationModel.create({ id: "location_" + uuid.v1(), name: "Other" })
+
+
 	let listCopany = []
 	let allKill = []
 	for (i = 0; i <= 20; i++) {
@@ -117,7 +139,7 @@ async function crawler() {
 	let letListjob = []
 	let listLinkjob = []
 
-	for (i = 0; i <= 150; i++) {
+	for (i = 0; i <= 120; i++) {
 		try {
 			console.log('------------------------------------------------', i, listCopany[i])
 			const cp = {}
@@ -161,28 +183,49 @@ async function crawler() {
 				cp.technologies = tec
 				// console.log(tec)
 			}
-			// console.log('-------------cp_basic_info_details--------------------')
-			// if ($('.cp_basic_info_details').data() !== undefined) {
-			// 	let location = ''
-			// 	const cp_basic_info_details = cheerio.load($('.cp_basic_info_details').html())
-			// 	cp_basic_info_details('.li-items-limit').each((index, el) => {
-			// 		console.log(cheerio.load(el).text())
-			// 		location = location + ' ' + cheerio.load(el).text()
-			// 	})
-			// 	cp.location = location
-			// }
-			const location = []
+			let location = []
+			console.log('-------------cp_basic_info_details--------------------')
+			if ($('.cp_basic_info_details').data() !== undefined) {
+				const cp_basic_info_details = cheerio.load($('.cp_basic_info_details').html())
+				cp_basic_info_details('.li-items-limit').each((index, el) => {
+					if (index === 0) {
+						console.log(cheerio.load(el).text())
+						const textLocation = cheerio.load(el).text()
+						let listLocation = textLocation.split(",")
+						console.log(listLocation)
+						for (let v = 0; v < listLocation.length; v++) {
+							if (STRINGHH.includes(listLocation[v].trim())) {
+								location.push(objectHaNoi)
+							}
+							if (STRINGDANANG.includes(listLocation[v].trim())) {
+								location.push(objectDaNang)
+							}
+							if (STRINGBINHDUONG.includes(listLocation[v].trim())) {
+								location.push(objectBinhHDuong)
+							}
+							if (STRINGHCM.includes(listLocation[v].trim())) {
+								location.push(objectHoChiMinh)
+							}
+							if (STRINGCANTHO.includes(listLocation[v].trim())) {
+								location.push(objectCanTho)
+							}
+						}
+					}
+				})
+			}
+			cp.location = location
+			const address = []
 			console.log('-------------location--------------------')
 			if ($('div.cp_address-container').data() !== undefined) {
 				const cp_our_office_img = cheerio.load($('div.cp_address-container').html())
 				cp_our_office_img('p').each((index, el) => {
 					if (cheerio.load(el).text().length > 12) {
-						location.push(cheerio.load(el).text())
+						address.push(cheerio.load(el).text())
 					}
 				})
 
 			}
-			cp.location = location
+			cp.address = address
 			console.log('-------------ourStory--------------------')
 			if ($('div.cp_our_story_container').data() !== undefined) {
 				let ourStory = []
@@ -348,7 +391,7 @@ async function crawler() {
 	// 	}
 	// })
 
-	for (let j = 0; j < listLinkjob[j].length; j++) {
+	for (let j = 0; j < listLinkjob.length; j++) {
 		console.log("----------------------------------job ----- detail ---------------------------------")
 		let link = listLinkjob[j]
 		console.log("link", link)
@@ -453,7 +496,7 @@ async function crawler() {
 			// letListjob[j].jobId = letListjob[j].id
 			// delete letListjob[j].id
 			// bulkJob.push(letListjob[j])
-			console.log(letListjob[j])
+			// console.log(letListjob[j])
 
 
 		} catch (error) {
@@ -485,11 +528,6 @@ async function crawler() {
 			console.log('hihi')
 		}
 	}
-
-
-
-
-
 	console.log("----------------------end----------------------------------")
 }
 
