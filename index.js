@@ -178,7 +178,7 @@ async function crawler() {
 				let tec = []
 				cp_key_technologies('ul li').each((index, el) => {
 					// console.log(cheerio.load(el).text())
-					tec.push(cheerio.load(el).text())
+					tec.push(cheerio.load(el).text().trim())
 				})
 				cp.technologies = tec
 				// console.log(tec)
